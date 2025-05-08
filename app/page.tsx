@@ -1,103 +1,135 @@
+'use client';
+import { stat } from "fs";
 import Image from "next/image";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const mediaRecorder = useRef<MediaRecorder | null>(null);
+  const videoChunks = useRef<Blob[]>([]);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const getMediaPermission = useCallback(async () => {
+    try {
+      const audioConstraints = { audio: true };
+      const videoConstraints = {
+        audio: false,
+        video: true,
+      };
+
+      const audioStream = await navigator.mediaDevices.getUserMedia(
+          audioConstraints
+      );
+      const videoStream = await navigator.mediaDevices.getUserMedia(
+          videoConstraints
+      );
+
+      if (videoRef.current) {
+          videoRef.current.srcObject = videoStream;
+      }
+
+      // MediaRecorder 추가
+      const combinedStream = new MediaStream([
+          ...videoStream.getVideoTracks(),
+        ...audioStream.getAudioTracks(),
+      ]);
+
+      const recorder = new MediaRecorder(combinedStream, {
+          mimeType: 'video/webm',
+      });
+
+      recorder.ondataavailable = (e) => {
+          if (typeof e.data === 'undefined') return;
+        if (e.data.size === 0) return;
+        videoChunks.current.push(e.data);
+      };
+
+      mediaRecorder.current = recorder;
+    } catch (err) {
+      console.log(err);
+    }
+  }, []);
+
+  useEffect(() => {
+    getMediaPermission();
+  }, []);
+
+  const downloadVideo = () => {
+    const videoBlob = new Blob(videoChunks.current, { type: 'video/webm' });
+    const videoUrl = URL.createObjectURL(videoBlob);
+    const link = document.createElement('a');
+    link.download = `My video.webm`;
+    link.href = videoUrl;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const [recordState, setRecordState] = useState(false);
+  const [state, setState] = useState(0);
+  useEffect(() => {
+    if(state === 1) {
+      const videoBlob = new Blob(videoChunks.current, { type: 'video/webm' });
+      const formData = new FormData();
+      formData.append('video', videoBlob);
+
+      setTimeout(() => {
+        setState(2);
+      }, 1500);
+    }
+    if(state === 0) {
+      getMediaPermission();
+    }
+  }, [state]);
+
+  return (
+    <div>
+      { state === 0 && <div className="fixed top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2 w-[800px]">
+        <div className="flex justify-between items-end mb-5">
+          <div>
+            <div className="text-lg">제 9회 과학창의체험전 - 키이스트(정보)</div>
+            <div className="text-2xl font-bold">AI로 배우는 볼링</div>
+          </div>
+          { recordState && <div className="flex items-center space-x-1 animate-pulse">
+            <div className="w-3 h-3 rounded-full bg-red-500"></div>
+            <div className="text-red-500">녹화중</div>
+          </div> }
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        <video className="h-[494px] w-[800px] object-cover object-center rounded-3xl" ref={videoRef} autoPlay />
+        <div className="flex items-center justify-center mt-5 spaxe-x-5">
+          <div onClick={() => {
+            if(recordState) {
+              mediaRecorder.current?.stop();
+              setRecordState(false);
+            }
+            else {
+              mediaRecorder.current?.start();
+              setRecordState(true);
+            }
+          }} className={ recordState ? "px-16 py-4 rounded-2xl bg-gray-100 text-gray-500 text-center cursor-pointer hover:bg-gray-200 transition-colors" : "px-16 py-4 rounded-2xl bg-red-100 text-red-500 text-center cursor-pointer hover:bg-red-200 transition-colors" }>
+            {recordState ? '녹화 중지' : '녹화 시작'}
+          </div>
+          <div className="mr-3"></div>
+          <div onClick={() => {
+            setState(1);
+          }} className={ recordState ? "px-16 py-4 rounded-2xl bg-blue-100 text-blue-500 text-center opacity-50 transition-colors" : "px-16 py-4 rounded-2xl bg-blue-100 text-blue-500 text-center cursor-pointer hover:bg-blue-200 transition-colors" }>
+            결과 확인
+          </div>
+          {/* <button onClick={downloadVideo}>Download</button> */}
+        </div>
+      </div> }
+      { state === 1 && <div className="fixed top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2 items-center justify-center">
+        <div className="tossface text-[10rem] animate-bounce text-center">🤖</div>
+        <div className="text-3xl font-bold text-center">AI가 영상을 살펴보고 있어요</div>
+        <div className="text-lg text-center mt-1">잠시 기다리면 볼링을 더 잘 칠 수 있는 방법을 알려드릴게요</div>
+      </div> }
+      { state === 2 && <div className="fixed top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2 items-center justify-center p-5 bg-gray-100 rounded-2xl w-[400px]">
+        <div className="flex items-center space-x-2">
+          <div className="tossface text-2xl">🤖</div>
+          <div className="text-gray-500">이렇게 해보면 어떨까요?</div>
+        </div>
+        <div className="text-base mt-3">공을 조금 더 늦게 놓아보세요. 너무 빨리 놓아 공이 위로 뜨면서 앞으로 가는 힘을 잘 받지 못하는 것 같아요. 또, 발 위치를 조금 더 조정해보고 나에게 맞는 위치를 잘 찾아보면 볼링 실력을 높일 수 있을거에요!</div>
+        <div onClick={() => setState(0)} className="underline text-gray-500 mt-3 cursor-pointer">처음으로 돌아가기</div>
+      </div> }
     </div>
   );
 }
