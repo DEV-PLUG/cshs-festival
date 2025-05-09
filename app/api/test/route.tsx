@@ -2,11 +2,10 @@ import { NextResponse } from "next/server";
 import { GoogleGenAI, } from "@google/genai";
 
  
- export const POST = async function PostHandler(request:Request) {
-  const ai = new GoogleGenAI({ apiKey: "YAIzaSyCpYIW4xP3f2yNzzd8lACYuJBIssLYnbkE" });
-  const req = await request.json();
-  const blob = req.video
-  const contents = [
+export const POST = async function PostHandler(request:Request) {
+  const ai = new GoogleGenAI({ apiKey: "AIzaSyBNtBw7IYI4Gi4b3nF4AEx8vJBcQkKJLfc" });
+  const blob = request
+  const contents:any = [
     {
       inlineData: {
         mimeType: "video/mov",
@@ -15,9 +14,9 @@ import { GoogleGenAI, } from "@google/genai";
     },
     { text: "You are helpful balling advice AI assistant. After watching this balling video, give appropriate advice for improvement. You must use a friendly tone. You must response in Korean." }
   ];
-
+  
   const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash-preview-04-17",
+    model: "gemini-2.0-flash",
     contents: contents,
   });
   return NextResponse.json({

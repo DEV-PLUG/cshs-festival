@@ -66,11 +66,26 @@ export default function Home() {
 
   const [recordState, setRecordState] = useState(false);
   const [state, setState] = useState(0);
-  useEffect(() => {
+
+  async function handleVideo() {
     if(state === 1) {
       const videoBlob = new Blob(videoChunks.current, { type: 'video/webm' });
       const formData = new FormData();
       formData.append('video', videoBlob);
+
+      await fetch('/api/test', {
+        method: 'POST',
+        body: formData,
+      })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then((data) => {
+        console.log(data);
+      });
 
       setTimeout(() => {
         setState(2);
@@ -79,6 +94,9 @@ export default function Home() {
     if(state === 0) {
       getMediaPermission();
     }
+  }
+  useEffect(() => {
+    handleVideo();
   }, [state]);
 
   return (
