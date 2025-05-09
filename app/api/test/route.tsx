@@ -4,12 +4,14 @@ import { GoogleGenAI, } from "@google/genai";
  
 export const POST = async function PostHandler(request:Request) {
   const ai = new GoogleGenAI({ apiKey: "AIzaSyBNtBw7IYI4Gi4b3nF4AEx8vJBcQkKJLfc" });
-  const blob = request
-  const contents:any = [
+  const req = await request.json();
+  const { video, type } = req;
+
+  const contents = [
     {
       inlineData: {
-        mimeType: "video/mov",
-        data: blob,
+        mimeType: type,
+        data: video,
       },
     },
     { text: "You are helpful balling advice AI assistant. After watching this balling video, give appropriate advice for improvement. You must use a friendly tone. You must response in Korean." }
