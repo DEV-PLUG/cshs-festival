@@ -69,13 +69,28 @@ export default function Home() {
 
   async function handleVideo() {
     if(state === 1) {
-      const videoBlob = new Blob(videoChunks.current, { type: 'video/webm' });
+      const videoBlob = new Blob(videoChunks.current, { type: mediaRecorder.current?.mimeType || 'video/webm' });
+      console.log(videoBlob)
       const formData = new FormData();
       formData.append('video', videoBlob);
 
+      const filereader = new FileReader();
+      let base64data = "";
+      filereader.readAsDataURL(videoBlob);
+      filereader.onload = function() {
+        base64data = filereader.result as string;
+        console.log(base64data);
+      };
+
       await fetch('/api/test', {
         method: 'POST',
-        body: formData,
+        body: JSON.stringify({
+          video: base64data,
+          type: mediaRecorder.current?.mimeType || 'video/webm',
+        }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
       })
       .then((response) => {
         if (!response.ok) {
