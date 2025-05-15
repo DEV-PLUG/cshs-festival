@@ -155,8 +155,8 @@ export default function Home() {
 
       {state === 2 && (
         <div className="fixed top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2 space-y-5">
-          <video className="h-[247px] w-[400px] object-cover object-center rounded-3xl" autoPlay loop controls src={'data:video/mp4;base64,' + videoData}></video>
-          <div className="items-center justify-center p-5 bg-gray-100 rounded-2xl w-[400px]">
+          <video className="h-[400px] w-[800px] object-cover object-center rounded-3xl" autoPlay loop controls src={'data:video/mp4;base64,' + videoData}></video>
+          <div className="items-center justify-center p-5 bg-gray-100 rounded-2xl mx-auto w-[400px]">
             <div className="flex items-center space-x-2">
               <div className="tossface text-2xl">🤖</div>
               <div className="text-gray-500">이렇게 해보면 어떨까요?</div>
