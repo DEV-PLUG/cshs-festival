@@ -18,6 +18,7 @@ export const POST = async function PostHandler(request:Request) {
   console.log(videoBlob)
   const video = videoBuffer.toString("base64")
   console.log(video)
+  const type = "video/webm"
 
   // 왜 함수가 비동기고 지랄이야
   // let video
@@ -35,14 +36,25 @@ export const POST = async function PostHandler(request:Request) {
   // const video = fs.readFileSync("public/WIN_20250512_19_33_52_Pro.mp4", {encoding: "base64"})
   // const type = "video/mp4"
   
-  const contents =  createPartFromBase64(video, "video/webm")
+  const contents =  createPartFromBase64(video, type)
   console.log(contents)
 
   const response = await ai.models.generateContent({
-    model: "gemini-2.0-flash",
+    model: "gemini-2.5-flash-preview-04-17",
     contents: contents,
     config: {
-      systemInstruction: "You are helpful bowling advice AI assistant. After watching this balling video, give appropriate advice for improvement. You must use a friendly tone. You must response in Korean. You must give detailed advice. You must not use Markdown syntax at response. Respone must about 200 characters."
+      systemInstruction: "\
+- You are helpful bowling advice AI assistant.\n\
+- After watching this balling video, give appropriate advice for improvement.\n\
+- Do not include text that you see video well.\n\
+- You must use a friendly tone.\n\
+- You must answer in Korean.\n\
+- You must give detailed advice.\n\
+- You cannot use difiicult term.\n\
+- You must not use Markdown syntax at response.\n\
+- You cannot include any phrases in response which are not related to bowling.\n\
+- If user achieves a strike, just praise them.\n\
+- Respone must about 200 characters."
     }
   });
   console.log(response.text)

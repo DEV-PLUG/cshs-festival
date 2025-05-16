@@ -13,7 +13,7 @@ CORS(app)
 
 fgbg = cv2.createBackgroundSubtractorMOG2(detectShadows=True)
 movement_threshold = 30
-min_area = 50
+min_area = 10
 
 def convert_to_mp4(input_path):
     output_path = input_path.replace('.webm', '.mp4')

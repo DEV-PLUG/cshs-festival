@@ -10,6 +10,31 @@ export default function Home() {
   const [state, setState] = useState(0); // 0: 초기화면, 1: 분석중, 2: 결과
   const [message, setMessage] = useState('');
 
+  const keyDown = (event:any) => {
+    const code = event.keyCode;
+    let charCode = String.fromCharCode(code).toUpperCase();
+
+    if (charCode === "Q") {
+      if (recordState) {
+        mediaRecorder.current?.stop(); // 녹화 종료 및 업로드
+        setRecordState(false);
+      } else {
+        videoChunks.current = []; // 이전 chunk 초기화
+        mediaRecorder.current?.start(); // 녹화 시작
+        setRecordState(true);
+      }
+    }
+    if(charCode === "W") {
+      setState(0);
+      getMediaPermission(); // 다시 미디어 권한 설정
+    }
+  };
+
+  useEffect(() => {
+    window.addEventListener("keydown", keyDown);
+    return () => window.removeEventListener("keydown", keyDown);
+  }, [recordState]);
+
   const getMediaPermission = useCallback(async () => {
     try {
       const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -154,16 +179,20 @@ export default function Home() {
       )}
 
       {state === 2 && (
-        <div className="fixed top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2 space-y-5">
-          <video className="h-[400px] w-[800px] object-cover object-center rounded-3xl" autoPlay loop controls src={'data:video/mp4;base64,' + videoData}></video>
-          <div className="items-center justify-center p-5 bg-gray-100 rounded-2xl mx-auto w-[400px]">
-            <div className="flex items-center space-x-2">
-              <div className="tossface text-2xl">🤖</div>
-              <div className="text-gray-500">이렇게 해보면 어떨까요?</div>
-            </div>
-            <div className="text-base mt-3">{message}</div>
-            <div onClick={handleRetry} className="underline text-gray-500 mt-3 cursor-pointer">
-              처음으로 돌아가기
+        <div className="fixed top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2 space-y-5 flex space-x-5 items-center">
+          <div className="w-[800px]">
+            <video className="h-[450px] w-[800px] object-cover object-center rounded-3xl" autoPlay loop controls src={'data:video/mp4;base64,' + videoData}></video>
+          </div>
+          <div className="w-[400px]">
+            <div className="items-center justify-center p-5 bg-gray-100 rounded-2xl mx-auto w-[400px]">
+              <div className="flex items-center space-x-2">
+                <div className="tossface text-2xl">🤖</div>
+                <div className="text-gray-500">이렇게 해보면 어떨까요?</div>
+              </div>
+              <div className="text-base mt-3">{message}</div>
+              <div onClick={handleRetry} className="underline text-gray-500 mt-3 cursor-pointer">
+                처음으로 돌아가기
+              </div>
             </div>
           </div>
         </div>
